@@ -11,7 +11,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	log.Print("leeroy app server ready")
+	log.Print("leeroy app server ready to roll")
 	http.HandleFunc("/", handler)
 	http.ListenAndServe(":50051", nil)
 }

@@ -6,6 +6,13 @@ build:
       context: leeroy-web
     - image: leeroy-app
       context: leeroy-app
+test:
+  - image: leeroy-web
+    structureTests:
+      - ./leeroy-web/test/*
+  - image: leeroy-app
+    structureTests:
+      - ./leeroy-app/test/*
 deploy:
   kubectl:
     manifests:

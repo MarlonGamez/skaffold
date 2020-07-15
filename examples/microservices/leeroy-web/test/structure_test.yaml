@@ -1,0 +1,9 @@
+schemaVersion: 2.0.0
+
+fileExistenceTests:
+  - name: 'no local gogogogogo binary'
+    path: /usr/local/bin/gogogogogo'
+    shouldExist: false
+  - name: 'no local whattheheck binary'
+    path: /usr/local/bin/whattheheck'
+    shouldExist: false

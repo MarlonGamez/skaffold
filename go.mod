@@ -42,6 +42,7 @@ require (
 	github.com/google/go-cmp v0.4.0
 	github.com/google/go-containerregistry v0.0.0-20200413145205-82d30a103c0a
 	github.com/google/go-github v17.0.0+incompatible
+	github.com/google/ko v0.5.1 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/grpc-ecosystem/grpc-gateway v1.14.3
 	github.com/heroku/color v0.0.6
@@ -80,9 +81,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 	k8s.io/api v0.18.1
 	k8s.io/apiextensions-apiserver v0.18.1 // indirect
-	k8s.io/apimachinery v0.18.1
+	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v0.18.1
 	k8s.io/kubectl v0.0.0-20190831163037-3b58a944563f
 	k8s.io/utils v0.0.0-20200324210504-a9aa75ae1b89
 	knative.dev/pkg v0.0.0-20200416021448-f68639f04b39 // indirect
+	sigs.k8s.io/kind v0.8.1 // indirect
 )
