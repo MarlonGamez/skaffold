@@ -32,6 +32,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	deploy "github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy/kubectl"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubectl"
@@ -46,6 +47,7 @@ var (
 	DefaultKustomizePath = "."
 	kustomizeFilePaths   = []string{"kustomization.yaml", "kustomization.yml", "Kustomization"}
 	basePath             = "base"
+	kustomizeBinaryCheck = kustomizeBinaryExists // For testing
 )
 
 // kustomization is the content of a kustomization.yaml file.
@@ -99,9 +101,14 @@ type KustomizeDeployer struct {
 	labels             map[string]string
 	BuildArgs          []string
 	globalConfig       string
+	addSkaffoldLabels  bool
+	useKubectl         bool
 }
 
 func NewKustomizeDeployer(runCtx *runcontext.RunContext, labels map[string]string) *KustomizeDeployer {
+	// if user has kustomize binary, prioritize that over kubectl kustomize
+	useKubectl := !kustomizeBinaryCheck() && kubectlVersionCheck(runCtx)
+
 	return &KustomizeDeployer{
 		KustomizeDeploy: runCtx.Cfg.Deploy.KustomizeDeploy,
 		kubectl: deploy.CLI{
@@ -113,6 +120,43 @@ func NewKustomizeDeployer(runCtx *runcontext.RunContext, labels map[string]strin
 		BuildArgs:          runCtx.Cfg.Deploy.KustomizeDeploy.BuildArgs,
 		globalConfig:       runCtx.Opts.GlobalConfig,
 		labels:             labels,
+		addSkaffoldLabels:  runCtx.Opts.AddSkaffoldLabels,
+		useKubectl:         useKubectl,
+	}
+}
+
+// Check for existence of kustomize binary in user's PATH
+func kustomizeBinaryExists() bool {
+	if _, err := exec.LookPath("kustomize"); err != nil {
+		return false
+	}
+
+	return true
+}
+
+// Check that kubectl version is valid to use kubectl kustomize
+func kubectlVersionCheck(runCtx *runcontext.RunContext) bool {
+	kubectl := deploy.CLI{
+		CLI:         kubectl.NewFromRunContext(runCtx),
+		Flags:       runCtx.Cfg.Deploy.KustomizeDeploy.Flags,
+		ForceDeploy: runCtx.Opts.Force,
+	}
+
+	gt, err := kubectl.CompareVersionTo(context.Background(), 1, 14)
+	if err != nil {
+		return false
+	}
+	if gt == 1 {
+		return true
+	}
+
+	return false
+}
+
+// Labels returns the labels specific to kustomize.
+func (k *KustomizeDeployer) Labels() map[string]string {
+	return map[string]string{
+		constants.Labels.Deployer: "kustomize",
 	}
 }
 
@@ -353,8 +397,16 @@ func pathExistsLocally(filename string, workingDir string) (bool, os.FileMode) {
 func (k *KustomizeDeployer) readManifests(ctx context.Context) (deploy.ManifestList, error) {
 	var manifests deploy.ManifestList
 	for _, kustomizePath := range k.KustomizePaths {
-		cmd := exec.CommandContext(ctx, "kustomize", buildCommandArgs(k.BuildArgs, kustomizePath)...)
-		out, err := util.RunCmdOut(cmd)
+		var out []byte
+		var err error
+
+		if k.useKubectl {
+			out, err = k.kubectl.Kustomize(ctx, buildCommandArgs(k.BuildArgs, kustomizePath))
+		} else {
+			cmd := exec.CommandContext(ctx, "kustomize", append([]string{"build"}, buildCommandArgs(k.BuildArgs, kustomizePath)...)...)
+			out, err = util.RunCmdOut(cmd)
+		}
+
 		if err != nil {
 			return nil, fmt.Errorf("kustomize build: %w", err)
 		}
@@ -369,7 +421,6 @@ func (k *KustomizeDeployer) readManifests(ctx context.Context) (deploy.ManifestL
 
 func buildCommandArgs(buildArgs []string, kustomizePath string) []string {
 	var args []string
-	args = append(args, "build")
 
 	if len(buildArgs) > 0 {
 		for _, v := range buildArgs {
