@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/ui"
 )
 
 // InSequence builds a list of artifacts in sequence.
@@ -32,6 +33,8 @@ func InSequence(ctx context.Context, out io.Writer, tags tag.ImageTags, artifact
 	var builds []Artifact
 
 	for _, artifact := range artifacts {
+		bar := ui.AddNewSpinner("  ", artifact.ImageName)
+
 		color.Default.Fprintf(out, "Building [%s]...\n", artifact.ImageName)
 
 		event.BuildInProgress(artifact.ImageName)
@@ -47,6 +50,7 @@ func InSequence(ctx context.Context, out io.Writer, tags tag.ImageTags, artifact
 			return nil, fmt.Errorf("couldn't build %q: %w", artifact.ImageName, err)
 		}
 
+		bar.Increment()
 		event.BuildComplete(artifact.ImageName)
 
 		builds = append(builds, Artifact{

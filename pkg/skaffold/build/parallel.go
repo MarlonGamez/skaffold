@@ -27,6 +27,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/ui"
 )
 
 const bufferedLinesPerArtifact = 10000
@@ -66,6 +67,7 @@ func InParallel(ctx context.Context, out io.Writer, tags tag.ImageTags, artifact
 	// Run builds in //
 	wg.Add(len(artifacts))
 	for i := range artifacts {
+		bar := ui.AddNewSpinner("  ", artifacts[i].ImageName)
 		outputs[i] = make(chan string, buffSize)
 		r, w := io.Pipe()
 
@@ -75,7 +77,7 @@ func InParallel(ctx context.Context, out io.Writer, tags tag.ImageTags, artifact
 			sem <- true
 			runBuild(ctx, w, tags, artifacts[i], results, buildArtifact)
 			<-sem
-
+			bar.Increment()
 			wg.Done()
 		}(i)
 

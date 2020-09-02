@@ -30,6 +30,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/ui"
 )
 
 // BuildAndTest builds and tests a list of artifacts.
@@ -68,10 +69,14 @@ func (r *SkaffoldRunner) BuildAndTest(ctx context.Context, out io.Writer, artifa
 
 		r.hasBuilt = true
 
+		p := ui.NewProgress(nil)
+		bar := ui.AddNewSpinner("", "Building")
 		bRes, err := r.builder.Build(ctx, out, tags, artifacts)
 		if err != nil {
 			return nil, err
 		}
+		bar.Increment()
+		p.Wait()
 
 		if !r.runCtx.SkipTests() {
 			if err = r.tester.Test(ctx, out, bRes); err != nil {

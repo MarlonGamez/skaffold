@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -33,6 +34,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/server"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/survey"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/ui"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/update"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/version"
 )
@@ -44,6 +46,7 @@ var (
 	forceColors       bool
 	overwrite         bool
 	interactive       bool
+	pretty            bool
 	shutdownAPIServer func() error
 )
 
@@ -72,6 +75,11 @@ func NewSkaffoldCommand(out, err io.Writer) *cobra.Command {
 
 			color.SetupColors(out, defaultColor, forceColors)
 			cmd.Root().SetOutput(out)
+
+			if pretty {
+				ui.SetOutput(out)
+				cmd.Root().SetOutput(ioutil.Discard)
+			}
 
 			// Setup logs
 			if err := setUpLogs(err, v); err != nil {
@@ -179,6 +187,7 @@ func NewSkaffoldCommand(out, err io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().BoolVar(&interactive, "interactive", true, "Allow user prompts for more information")
 	rootCmd.PersistentFlags().BoolVar(&update.EnableCheck, "update-check", true, "Check for a more recent version of Skaffold")
 	rootCmd.PersistentFlags().MarkHidden("force-colors")
+	rootCmd.PersistentFlags().BoolVar(&pretty, "pretty", false, "Use progress bar UI for skaffold [ALPHA]")
 
 	setFlagsFromEnvVariables(rootCmd)
 
