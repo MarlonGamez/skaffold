@@ -69,7 +69,7 @@ func (r *SkaffoldRunner) BuildAndTest(ctx context.Context, out io.Writer, artifa
 
 		r.hasBuilt = true
 
-		p := ui.NewProgress(nil)
+		p := ui.NewProgressGroup(nil)
 		bar := ui.AddNewSpinner("", "Building")
 		bRes, err := r.builder.Build(ctx, out, tags, artifacts)
 		if err != nil {
