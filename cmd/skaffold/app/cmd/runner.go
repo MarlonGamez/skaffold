@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/sirupsen/logrus"
 
@@ -34,6 +35,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/validation"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/update"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 )
 
 // For tests
@@ -69,15 +71,24 @@ func createNewRunner(opts config.SkaffoldOptions) (runner.Runner, *latest.Skaffo
 func runContext(opts config.SkaffoldOptions) (*runcontext.RunContext, *latest.SkaffoldConfig, error) {
 	parsed, err := schema.ParseConfigAndUpgrade(opts.ConfigurationFile, latest.Version)
 	if err != nil {
+		// If skaffold.yaml not found, try to create one and use before failing
 		if os.IsNotExist(errors.Unwrap(err)) {
-			return nil, nil, fmt.Errorf("skaffold config file %s not found - check your current working directory, or try running `skaffold init`", opts.ConfigurationFile)
-		}
+			fmt.Printf("config written")
+			cmd := exec.Command("skaffold", "init", "--force")
+			if err := util.RunCmd(cmd); err != nil {
+				return nil, nil, fmt.Errorf("trying to generate skaffold.yaml: %w", err)
+			}
+			parsed, _ = schema.ParseConfigAndUpgrade(opts.ConfigurationFile, latest.Version)
+			os.Remove(opts.ConfigurationFile)
 
-		// If the error is NOT that the file doesn't exist, then we warn the user
-		// that maybe they are using an outdated version of Skaffold that's unable to read
-		// the configuration.
-		warnIfUpdateIsAvailable()
-		return nil, nil, fmt.Errorf("parsing skaffold config: %w", err)
+			// return nil, nil, fmt.Errorf("skaffold config file %s not found - check your current working directory, or try running `skaffold init`", opts.ConfigurationFile)
+		} else {
+			// If the error is NOT that the file doesn't exist, then we warn the user
+			// that maybe they are using an outdated version of Skaffold that's unable to read
+			// the configuration.
+			warnIfUpdateIsAvailable()
+			return nil, nil, fmt.Errorf("parsing skaffold config: %w", err)
+		}
 	}
 
 	config := parsed.(*latest.SkaffoldConfig)
