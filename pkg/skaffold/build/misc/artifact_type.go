@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy/util"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/yaml"
 )
@@ -52,6 +53,16 @@ func ArtifactType(a *latest.Artifact) string {
 	default:
 		return ""
 	}
+}
+
+// ListBuilders returns a list of builder names being used in the given build config.
+func ListBuilders(build *latest.BuildConfig) []string {
+	results := util.NewStringSet()
+	for _, artifact := range build.Artifacts {
+		results.Insert(ArtifactType(artifact))
+	}
+
+	return results.ToList()
 }
 
 // FormatArtifact returns a string representation of an artifact for usage in error messages

@@ -21,6 +21,7 @@ import (
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/docker"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 )
 
 // ApplyDefaultRepo applies the default repo to a given image tag.
@@ -36,4 +37,23 @@ func ApplyDefaultRepo(globalConfig string, defaultRepo *string, tag string) (str
 	}
 
 	return newTag, nil
+}
+
+// ListDeployers returns a list of deployer names being used in the given deploy config.
+func ListDeployers(deploy *latest.DeployType) []string {
+	results := NewStringSet()
+	if deploy.HelmDeploy != nil {
+		results.Insert("helm")
+	}
+	if deploy.KptDeploy != nil {
+		results.Insert("kpt")
+	}
+	if deploy.KubectlDeploy != nil {
+		results.Insert("kubectl")
+	}
+	if deploy.KustomizeDeploy != nil {
+		results.Insert("kustomize")
+	}
+
+	return results.ToList()
 }
