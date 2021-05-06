@@ -23,7 +23,7 @@ import (
 	"os"
 	"strings"
 
-	eventV2 "github.com/GoogleContainerTools/skaffold/pkg/skaffold/event/v2"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/output"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -78,7 +78,7 @@ func NewSkaffoldCommand(out, errOut io.Writer) *cobra.Command {
 			instrumentation.SetCommand(cmd.Use)
 
 			// Setup output
-			colorOut := color.SetupColors(out, defaultColor, forceColors)
+			colorOut := output.SetupOutput(out, defaultColor, forceColors)
 			if timestamps {
 				l := logrus.New()
 				l.SetOutput(colorOut)
@@ -87,10 +87,7 @@ func NewSkaffoldCommand(out, errOut io.Writer) *cobra.Command {
 				})
 				colorOut = l.Writer()
 			}
-			eventOut := eventV2.NewLogger(constants.DevLoop, "0")
-			skaffoldOut := io.MultiWriter(colorOut, eventOut)
-
-			cmd.Root().SetOutput(skaffoldOut)
+			cmd.Root().SetOutput(colorOut)
 
 			// Setup logs
 			if err := setUpLogs(errOut, v, timestamps); err != nil {

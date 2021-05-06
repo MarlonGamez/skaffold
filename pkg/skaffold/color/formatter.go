@@ -73,6 +73,7 @@ func SetupColors(out io.Writer, defaultColor int, forceColors bool) io.Writer {
 	if useColors {
 		return NewWriter(out)
 	}
+
 	return out
 }
 
