@@ -54,3 +54,33 @@ func (ev *eventHandler) handleSkaffoldLogEvent(e *proto.SkaffoldLogEvent) {
 		},
 	})
 }
+
+type Writer struct {
+	origWriter io.Writer
+	subTaskID string
+	origin string
+	phase constants.Phase
+}
+
+func NewWriter(origWriter io.Writer, phase constants.Phase, subTaskID string, origin string) io.Writer {
+	return Writer {
+		origWriter: origWriter,
+		phase: phase,
+		subTaskID: subTaskID,
+		origin: origin,
+	}
+}
+
+func (w Writer) Write(p []byte) (int, error) {
+	w.origWriter.Write(p)
+
+	handler.handleSkaffoldLogEvent(&proto.SkaffoldLogEvent{
+		TaskId:               fmt.Sprintf("%s-%d", w.phase, handler.iteration),
+		SubtaskId:            w.subTaskID,
+		Origin:               w.origin,
+		Level:                0,
+		Message:              string(p),
+	})
+
+	return 0, nil
+}

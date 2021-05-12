@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
+	eventV2 "github.com/GoogleContainerTools/skaffold/pkg/skaffold/event/v2"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/logfile"
 	latest_v1 "github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest/v1"
 )
@@ -44,6 +46,30 @@ func WithLogFile(builder ArtifactBuilder, muted Muted) ArtifactBuilder {
 
 		// Run the build.
 		digest, err := builder(ctx, file, artifact, tag)
+
+		// After the build finishes, close the log file.
+		file.Close()
+
+		return digest, err
+	}
+}
+
+// WithLogFile wraps an `artifactBuilder` so that it optionally outputs its logs to a file.
+func WithLogFileTemp(builder ArtifactBuilder, muted Muted, out io.Writer) ArtifactBuilder {
+	if !muted.MuteBuild() {
+		return builder
+	}
+
+	return func(ctx context.Context, _ io.Writer, artifact *latest_v1.Artifact, tag string) (string, error) {
+		newOut := eventV2.NewWriter(out, constants.Build, "0", "docker")
+		file, err := logfile.Create("build", artifact.ImageName+".log")
+		if err != nil {
+			return "", fmt.Errorf("unable to create log file for %s: %w", artifact.ImageName, err)
+		}
+		fmt.Fprintln(out, " - writing logs to", file.Name())
+
+		// Run the build.
+		digest, err := builder(ctx, newOut, artifact, tag)
 
 		// After the build finishes, close the log file.
 		file.Close()

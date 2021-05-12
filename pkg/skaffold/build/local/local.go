@@ -34,7 +34,7 @@ func (b *Builder) Build(ctx context.Context, out io.Writer, a *latest_v1.Artifac
 	if b.prune {
 		b.localPruner.asynchronousCleanupOldImages(ctx, []string{a.ImageName})
 	}
-	builder := build.WithLogFile(b.buildArtifact, b.muted)
+	builder := build.WithLogFileTemp(b.buildArtifact, b.muted, out)
 	return builder
 }
 
