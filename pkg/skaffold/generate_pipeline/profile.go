@@ -27,7 +27,7 @@ import (
 
 	yamlv2 "gopkg.in/yaml.v2"
 
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
+	color "github.com/GoogleContainerTools/skaffold/pkg/skaffold/output"
 	latest_v1 "github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest/v1"
 )
 

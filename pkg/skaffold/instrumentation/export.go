@@ -53,7 +53,7 @@ var (
 )
 
 func ExportMetrics(exitCode int) error {
-	if !shouldExportMetrics || meter.Command == "" {
+	if !ShouldExportMetrics || meter.Command == "" {
 		return nil
 	}
 	home, err := homedir.Dir()

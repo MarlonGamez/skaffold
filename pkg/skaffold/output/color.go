@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package color
+package output
 
 import (
 	"fmt"
@@ -22,11 +22,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	colors "github.com/heroku/color"
 	"github.com/mattn/go-colorable"
 	"github.com/sirupsen/logrus"
-
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 )
 
 // Maintain compatibility with the old color coding.
@@ -73,7 +72,6 @@ func SetupColors(out io.Writer, defaultColor int, forceColors bool) io.Writer {
 	if useColors {
 		return NewWriter(out)
 	}
-
 	return out
 }
 
@@ -146,6 +144,9 @@ func IsColorable(out io.Writer) bool {
 	switch out.(type) {
 	case colorableWriter:
 		return true
+	case SkaffoldWriter:
+		sw := out.(SkaffoldWriter)
+		return IsColorable(sw.MainWriter)
 	default:
 		return false
 	}

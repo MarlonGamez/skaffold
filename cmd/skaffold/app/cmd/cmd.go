@@ -23,17 +23,18 @@ import (
 	"os"
 	"strings"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/instrumentation/prompt"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/output"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"k8s.io/kubectl/pkg/util/templates"
 
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/instrumentation"
+	color "github.com/GoogleContainerTools/skaffold/pkg/skaffold/output"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/server"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/survey"
@@ -126,7 +127,7 @@ func NewSkaffoldCommand(out, errOut io.Writer) *cobra.Command {
 						updateMsg <- msg
 					}
 					surveyPrompt <- config.ShouldDisplayPrompt(opts.GlobalConfig)
-					metricsPrompt <- instrumentation.ShouldDisplayMetricsPrompt(opts.GlobalConfig)
+					metricsPrompt <- prompt.ShouldDisplayMetricsPrompt(opts.GlobalConfig)
 				}()
 			}
 			return nil
@@ -150,7 +151,7 @@ func NewSkaffoldCommand(out, errOut io.Writer) *cobra.Command {
 			select {
 			case showMetricsPrompt := <-metricsPrompt:
 				if showMetricsPrompt {
-					if err := instrumentation.DisplayMetricsPrompt(opts.GlobalConfig, cmd.OutOrStdout()); err != nil {
+					if err := prompt.DisplayMetricsPrompt(opts.GlobalConfig, cmd.OutOrStdout()); err != nil {
 						fmt.Fprintf(cmd.OutOrStderr(), "%v\n", err)
 					}
 				}

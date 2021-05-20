@@ -35,7 +35,7 @@ import (
 	shell "github.com/kballard/go-shellquote"
 	"github.com/sirupsen/logrus"
 
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
+	color "github.com/GoogleContainerTools/skaffold/pkg/skaffold/output"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	deployerr "github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy/error"
