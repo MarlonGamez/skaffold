@@ -81,7 +81,7 @@ func (h logHook) Levels() []logrus.Level {
 // Fire constructs a SkaffoldLogEvent and sends it to the event channel
 func (h logHook) Fire(entry *logrus.Entry) error {
 	handler.handleSkaffoldLogEvent(&proto.SkaffoldLogEvent{
-		TaskId:    handler.task,
+		TaskId:    fmt.Sprintf("%s-%d", handler.task, handler.iteration),
 		SubtaskId: handler.subtask,
 		Level:     levelFromEntry(entry),
 		Message:   entry.Message,

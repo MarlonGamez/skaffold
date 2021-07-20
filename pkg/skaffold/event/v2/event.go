@@ -74,7 +74,7 @@ type eventHandler struct {
 	skaffoldLogsLock    sync.Mutex
 	cfg                 Config
 
-	task                    string
+	task                    constants.Phase
 	subtask                 string
 	iteration               int
 	state                   proto.State
@@ -131,7 +131,15 @@ func (ev *eventHandler) getState() proto.State {
 	return state
 }
 
-func (ev *eventHandler) setTask(task string) {
+func SetTask(task constants.Phase) {
+	handler.setTask(task)
+}
+
+func SetSubtask(subtask string) {
+	handler.setSubtask(subtask)
+}
+
+func (ev *eventHandler) setTask(task constants.Phase) {
 	ev.task = task
 }
 
@@ -330,7 +338,6 @@ func TaskInProgress(task constants.Phase, description string) {
 	}
 
 	taskID := fmt.Sprintf("%s-%d", task, handler.iteration)
-	handler.setTask(taskID)
 	handler.handleTaskEvent(&proto.TaskEvent{
 		Id:          taskID,
 		Task:        string(task),
