@@ -31,6 +31,8 @@ func DeployInProgress(id int) {
 		TaskId: fmt.Sprintf("%s-%d", constants.Deploy, handler.iteration),
 		Status: InProgress,
 	})
+
+	handler.subtask = strconv.Itoa(id)
 }
 
 func DeployFailed(id int, err error) {

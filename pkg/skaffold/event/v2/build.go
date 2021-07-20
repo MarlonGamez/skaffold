@@ -66,6 +66,8 @@ func buildSubtaskEvent(artifact, step, status string, err error) {
 		Status:        status,
 		ActionableErr: aErr,
 	})
+
+	handler.subtask = artifact
 }
 
 func (ev *eventHandler) handleBuildSubtaskEvent(e *proto.BuildSubtaskEvent) {

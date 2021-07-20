@@ -31,6 +31,8 @@ func TesterInProgress(id int) {
 		TaskId: fmt.Sprintf("%s-%d", constants.Test, handler.iteration),
 		Status: InProgress,
 	})
+
+	handler.subtask = strconv.Itoa(id)
 }
 
 func TesterFailed(id int, err error) {
